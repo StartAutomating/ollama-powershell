@@ -104,6 +104,7 @@ svg -viewBox 300, 300 -Content @(
     $ollamaLlama
     svg.use -Href '#psChevron' @colorScheme -X 0% -Y 66% -Height 20% 
     svg.use -Href '#llama' @colorScheme -X 0% -Height 80% -Y 10%
+    # If the variant is not an icon, add the text
     if ($variant -notmatch 'Icon') {
         svg.text 'ollama-powershell' -FontFamily 'monospace' -AlignmentBaseline 'middle' -TextAnchor middle -X 50% -Y 85% @colorScheme -FontSize 1em
     }
