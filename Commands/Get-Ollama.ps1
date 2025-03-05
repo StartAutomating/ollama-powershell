@@ -79,7 +79,20 @@ function Get-Ollama {
     [Parameter(ValueFromPipelineByPropertyName,ParameterSetName='/embeddings')]
     [Alias('Options')]
     [PSObject]
-    $Option,
+    $Option = [Ordered]@{},
+
+    [Parameter(ValueFromPipelineByPropertyName,ParameterSetName='/generate')]
+    [Parameter(ValueFromPipelineByPropertyName,ParameterSetName='/chat')]
+    [Parameter(ValueFromPipelineByPropertyName,ParameterSetName='/embeddings')]
+    [int]
+    $Seed,
+
+    [Parameter(ValueFromPipelineByPropertyName,ParameterSetName='/generate')]
+    [Parameter(ValueFromPipelineByPropertyName,ParameterSetName='/chat')]
+    [Parameter(ValueFromPipelineByPropertyName,ParameterSetName='/embeddings')]
+    [int]
+    $Temperature,
+    
 
     # When creating a new model, this is the name of the base model
     [Parameter(ValueFromPipelineByPropertyName,ParameterSetName='/create')]
@@ -373,7 +386,23 @@ function Get-Ollama {
                 if ($MyInvocation.InvocationName -ne $MyInvocation.MyCommand.Name) {
                     $argumentList = @("run", $MyInvocation.InvocationName) + $argumentList
                 }
+                if ($Format -and -not ($ArgumentList -contains '--format')) {
+                    $argumentList += @("--format", $Format)
+                }
                 & $ollamaCli @ArgumentList
+            }
+            {
+                $Seed -or $Temperature
+            } {
+                if ($Seed) {
+                    # If we have a seed, set the appropriate option
+                    $Option['seed'] = $Seed
+                }
+                
+                if ($Temperature) {
+                    # If we have a temperature, set the appropriate option
+                    $Option['temperature'] = $Temperature
+                }
             }
             # version is the easiest parameter set
             "/version" {
@@ -461,7 +490,7 @@ function Get-Ollama {
                 if ($NoStream) {
                     # say so now.
                     $invokeSplat.Body.stream = $false
-                }
+                }                
 
                 # If we have any additional options
                 if ($Option) {
