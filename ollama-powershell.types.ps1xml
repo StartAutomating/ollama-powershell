@@ -1,0 +1,23 @@
+<!-- Generated with EZOut 2.0.6: Install-Module EZOut or https://github.com/StartAutomating/EZOut -->
+<Types>
+  <Type>
+    <Name>Ollama.Job</Name>
+    <Members>
+      <ScriptMethod>
+        <Name>ToString</Name>
+        <Script>
+                        if ($this.IO.StringBuilder){
+    "$($this.IO.StringBuilder)"
+} else {
+    return ($this | Receive-Job -Keep | Out-String)
+}
+                    </Script>
+      </ScriptMethod>
+    </Members>
+  </Type>
+  <Type>
+    <Name>Ollama.Model</Name>
+    <Members>
+    </Members>
+  </Type>
+</Types>
