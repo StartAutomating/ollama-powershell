@@ -2,7 +2,7 @@
     RootModule = 'ollama-powershell.psm1'
     ModuleVersion = '0.0.1'
     GUID = 'e9b68160-0f70-4821-86c5-64ddb66e841c'
-    Author = 'JamesBrundage'
+    Author = 'James Brundage'
     CompanyName = 'Start-Automating'
     Copyright = '2025 Start-Automating'
     TypesToProcess = @('ollama-powershell.types.ps1xml')
