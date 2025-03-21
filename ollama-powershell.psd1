@@ -12,6 +12,15 @@
             Tags = @('AI','ollama', 'PowerShell', 'LLM')
             LicenseURI = 'https://github.com/StartAutomating/ollama-powershell/blob/main/LICENSE'
             ProjectURI = 'https://github.com/StartAutomating/ollama-powershell'
+            ReleaseNotes = @'
+Initial release of ollama-powershell!
+
+Use ollama-powershell to interact with the Ollama API and run LLM models locally.
+
+* `Get-Ollama` wraps the Ollama CLI and Ollama rest API
+* `Remove-Ollama` removes models from your local system
+
+'@
         }
     }
 }
