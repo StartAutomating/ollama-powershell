@@ -1,0 +1,93 @@
+<!-- Generated with EZOut 2.0.6: Install-Module EZOut or https://github.com/StartAutomating/EZOut -->
+<Configuration>
+  <ViewDefinitions>
+    <View>
+      <Name>Ollama.Job</Name>
+      <ViewSelectedBy>
+        <TypeName>Ollama.Job</TypeName>
+      </ViewSelectedBy>
+      <CustomControl>
+        <CustomEntries>
+          <CustomEntry>
+            <CustomItem>
+              <ExpressionBinding>
+                <ScriptBlock>
+    $inJob = $_
+    if ($injob.StringBuilder.Length) {
+        "$($inJob.StringBuilder)"
+    } else {
+        $jobResults = $_ | Receive-Job -Keep *&gt;&amp;1
+        $resultText = @(foreach ($result in $jobResults) {
+            if ($result.response) {
+                $result.response
+            } elseif ($result.message.content) {
+                $result.message.content
+            }
+            elseif ($result.error) {
+                if ($PSStyle) {
+                    $PSStyle.Formatting.Error
+                    $result.error
+                    $PSStyle.Reset
+                }            
+            }
+            elseif ($result -is [Management.Automation.ErrorRecord]) {
+                $result.Exception.Message
+            }       
+        }) -join ''
+        if ($resultText) {
+            $resultText
+        } else {
+            $jobResults | Out-String
+        }
+    }    
+</ScriptBlock>
+              </ExpressionBinding>
+            </CustomItem>
+          </CustomEntry>
+        </CustomEntries>
+      </CustomControl>
+    </View>
+    <View>
+      <Name>Ollama.Model</Name>
+      <ViewSelectedBy>
+        <TypeName>Ollama.Model</TypeName>
+      </ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader>
+          </TableColumnHeader>
+          <TableColumnHeader>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Size</Label>
+          </TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem>
+                <PropertyName>Model</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>Modified_At</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>
+        if ($_.Size -gt 1GB) {
+            '{0:N2} gb' -f ($_.Size / 1GB)
+        } elseif ($_.Size -gt 1MB) {
+            '{0:N2} mb' -f ($_.Size / 1MB)
+        } elseif ($_.Size -gt 1KB) {
+            '{0:N2} kb' -f ($_.Size / 1KB)
+        } elseif ($_.Size) {
+            '{0:N2} b' -f $_.Size
+        }
+    </ScriptBlock>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+  </ViewDefinitions>
+</Configuration>
