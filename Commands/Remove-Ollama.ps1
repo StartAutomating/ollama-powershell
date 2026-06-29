@@ -12,8 +12,21 @@ function Remove-Ollama {
     [CmdletBinding(SupportsShouldProcess,ConfirmImpact='High')]
     param(
     # The name of the model to remove.
-    [Parameter(Mandatory,ValueFromPipelineByPropertyName,ParameterSetName='/delete')]
+    [Parameter(Mandatory,ValueFromPipelineByPropertyName,ParameterSetName='/delete')]    
     [Alias('Model','LanguageModel')]
+    [ArgumentCompleter({
+        param ( $commandName, $parameterName, $wordToComplete, 
+            $commandAst, $fakeBoundParameters )
+        $modelNames = @(Get-Ollama -ListModel | 
+            Select-Object -ExpandProperty name) -replace 
+            ':latest$'
+        if ($wordToComplete) {        
+            $toComplete = $wordToComplete -replace "^'" -replace "'$"
+            return @($modelNames -like "$toComplete*" -replace '^', "'" -replace '$',"'")
+        } else {
+            return @($modelNames -replace '^', "'" -replace '$',"'")
+        }
+    })]
     [string]
     $ModelName,
 
