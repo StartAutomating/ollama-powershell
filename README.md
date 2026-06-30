@@ -3,13 +3,9 @@
 <a href='https://www.powershellgallery.com/packages/ollama-powershell/'>
 <img src='https://img.shields.io/powershellgallery/dt/ollama-powershell' />
 </a>
-<br/>
-<a href='https://github.com/sponsors/StartAutomating'>❤️</a>
-<a href='https://github.com/StartAutomating/ollama-powershell/stargazers'>⭐</a>
 </div>
 
 Play with AI in PowerShell
-
 
 # Getting Started
 
