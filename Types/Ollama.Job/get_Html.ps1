@@ -6,6 +6,9 @@
 
     Unless the output explicitly starts with a tag,
     this will presume output is markdown.
+.EXAMPLE
+    Get-Ollama -ModelName tinyllama -Prompt "What are you?" |
+        Select-Object -Expand Html
 #>
 param()
 
