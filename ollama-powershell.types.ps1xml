@@ -13,6 +13,31 @@
 }
                     </Script>
       </ScriptMethod>
+      <ScriptProperty>
+        <Name>Html</Name>
+        <GetScriptBlock>
+                        &lt;#
+.SYNOPSIS
+    Gets Ollama Job output as html
+.DESCRIPTION
+    Gets Ollama Job output as html.
+
+    Unless the output explicitly starts with a tag,
+    this will presume output is markdown.
+#&gt;
+param()
+
+if (-not $this.ToString.Invoke) { return }
+
+$content = $this.ToString()
+
+if ($content -match '^[\s\r\n]+\&lt;') {
+    $content
+} else {
+    (ConvertFrom-Markdown -InputObject $content).Html
+}
+                    </GetScriptBlock>
+      </ScriptProperty>
     </Members>
   </Type>
   <Type>
