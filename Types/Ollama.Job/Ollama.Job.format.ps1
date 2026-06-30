@@ -1,10 +1,24 @@
 Write-FormatView -TypeName Ollama.Job -Action {
     $inJob = $_
     if ($injob.StringBuilder.Length) {
-        "$($inJob.StringBuilder)"
+        @(
+            if ($inJob.Input.prompt) {
+                foreach ($line in $inJob.Input.prompt -split '(?>\r\n|\n)') {
+                    "> $($line)"
+                }
+            }
+            "$($inJob.StringBuilder)"
+        ) -join [Environment]::NewLine
     } else {
         $jobResults = $_ | Receive-Job -Keep *>&1
-        $resultText = @(foreach ($result in $jobResults) {
+        $resultText = @(
+        if ($inJob.Input.prompt) {
+            @(foreach ($line in $inJob.Input.prompt -split '(?>\r\n|\n)') {
+                "> $($line)"
+            }) -join [Environment]::NewLine
+            [Environment]::NewLine * 2
+        }
+        foreach ($result in $jobResults) {
             if ($result.response) {
                 $result.response
             } elseif ($result.message.content) {
