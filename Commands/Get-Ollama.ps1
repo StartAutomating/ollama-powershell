@@ -61,6 +61,24 @@ function Get-Ollama {
     [Parameter(ValueFromPipelineByPropertyName,ParameterSetName='/chat')]
     [Parameter(ValueFromPipelineByPropertyName,ParameterSetName='/pull')]
     [Parameter(ValueFromPipelineByPropertyName,ParameterSetName='/create')]
+    [ArgumentCompleter({
+        param ( $commandName, $parameterName, $wordToComplete, 
+            $commandAst, $fakeBoundParameters)
+        $modelNames = @(Get-Ollama -ListModel |
+            Select-Object -ExpandProperty name) -replace 
+            ':latest$'
+        if ($wordToComplete) {
+            $toComplete = $wordToComplete -replace "^'" -replace "'$"
+            return @(
+                $modelNames -like
+                    "$toComplete*" -replace
+                    '^', "'" -replace
+                    '$',"'"
+            )
+        } else {
+            return @($modelNames -replace '^', "'" -replace '$',"'")
+        }
+    })]
     [Alias('Model','LanguageModel')]
     [string]
     $ModelName,
@@ -214,12 +232,13 @@ function Get-Ollama {
                         $streamingResponse.psobject.properties.add(
                             [psnoteproperty]::new('Prompt',$Prompt)
                         )
-                    }
+                    }                    
+
                     $streamingResponse.psobject.properties.add(
                         [psnoteproperty]::new('ResponseNumber',$responseNumber)
                     )
-                                                            
-                    $streamingResponse
+                    
+                    $streamingResponse                                        
                     $responseNumber++
                 }
             } -ArgumentList $in -Name $jobName
@@ -272,7 +291,7 @@ function Get-Ollama {
                         if ($resultsSoFar[$lastIndex].completed) {
                             $gbDown = [Math]::Round($resultsSoFar[$lastIndex].completed / 1GB, 2)
                             $gbTotal = [Math]::Round($resultsSoFar[$lastIndex].total / 1GB, 2)
-                            $progressSplat.Activity = "$($resultsSoFar[$lastIndex].status) "                            
+                            $progressSplat.Activity = "$($resultsSoFar[$lastIndex].status) "
                             $progressSplat.PercentComplete = [Math]::Round(
                                     $resultsSoFar[$lastIndex].completed * 100 / $resultsSoFar[$lastIndex].total,
                                     2
