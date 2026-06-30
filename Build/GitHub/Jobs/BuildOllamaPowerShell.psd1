@@ -15,26 +15,8 @@
             name = 'Use PSSVG Action'
             uses = 'StartAutomating/PSSVG@main'
             id = 'PSSVG'
-        }
-        @{
-            name = 'Use PipeScript Action'
-            uses = 'StartAutomating/PipeScript@main'
-            id = 'PipeScript'
-        }
+        }        
         'RunEZOut'
-        'RunHelpOut'
-        <#,
-        @{
-            name = 'Use PSJekyll Action'
-            uses = 'PowerShellWeb/PSJekyll@main'
-            id = 'PSJekyll'
-        }#>
-        <#@{
-            name = 'Run WebSocket (on branch)'
-            if   = '${{github.ref_name != ''main''}}'
-            uses = './'
-            id = 'WebSocketAction'
-        },#>
-        # 'BuildAndPublishContainer'
+        'RunHelpOut'        
     )
 }
