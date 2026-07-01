@@ -16,7 +16,7 @@ function Get-Ollama {
         # Pull down a model from the Ollama hub.  Please enjoy the progress bars.
         Get-Ollama -Model "tinyllama" -Pull
     .EXAMPLE
-        Get-Ollama -Model "llama3.2" -Prompt "Ollama is 22 years old and is busy saving the world. Respond using JSON" -Format ([Ordered]@{
+        Get-Ollama -Model "tinyllama" -Prompt "Ollama is 22 years old and is busy saving the world. Respond using JSON" -Format ([Ordered]@{
             type = 'object'
             properties = [Ordered]@{
                 age = @{type="integer"}
@@ -159,6 +159,10 @@ function Get-Ollama {
     [switch]
     $RunningModel,
 
+    # If set, will run in the background.
+    [switch]
+    $AsJob,
+
     # The url to the Ollama API.
     [Parameter(ValueFromPipelineByPropertyName)]
     [uri]
@@ -211,7 +215,7 @@ function Get-Ollama {
                 $responseStream = $webResponse.GetResponseStream()
                 $responseStreamReader = [IO.StreamReader]::new($responseStream)
                 $startTime = [datetime]::Now
-                $responseNumber = 0                
+                $responseNumber = 0
                 
                 while ($readLine = $responseStreamReader.ReadLine()) {
                     $streamingResponse = $readLine | ConvertFrom-Json
@@ -241,7 +245,7 @@ function Get-Ollama {
                     $streamingResponse                                        
                     $responseNumber++
                 }
-            } -ArgumentList $in -Name $jobName
+            } -ArgumentList $in -Name $jobName            
             $startedThreadJob.psobject.properties.add([psnoteproperty]::new('IO',$in))
             $startedThreadJob.pstypenames.add('Ollama.Job')
             $startedThreadJob
@@ -250,8 +254,16 @@ function Get-Ollama {
         filter WaitAndSummarize {
             $inJob = $_
             $typenames = @($args)
+            
             if ($inJob -isnot [Management.Automation.Job]) {
-                return
+                return $inJob
+            }
+            foreach ($typename in $typenames) {
+                $inJob.pstypenames.insert(0,$typename)
+            }
+
+            if ($AsJob) {
+                return $inJob
             }
             
             $progressSplat = [Ordered]@{Id = $inJob.Id}
@@ -309,9 +321,7 @@ function Get-Ollama {
             $progressSplat.Status = 'Done!'
             Write-Progress @progressSplat -Activity 'Waiting for Completion' -Status 'all done' -Completed
                         
-            foreach ($typename in $typenames) {
-                $inJob.pstypenames.insert(0,$typename)
-            }
+            
 
             if ($originalConsolePosition) {
                 [console]::Write("`e[$($originalConsolePosition.Item2);$($originalConsolePosition.Item1)H")
@@ -365,9 +375,7 @@ function Get-Ollama {
                 }
             } else {
                 # If there was already a model name provided, use it.
-                $ModelName
-
-                
+                $ModelName                
             }
 
         if ($PSBoundParameters['Format']) {
