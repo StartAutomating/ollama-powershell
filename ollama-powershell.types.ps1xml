@@ -7,7 +7,15 @@
         <Name>ToString</Name>
         <Script>
                         if ($this.IO.StringBuilder){
-    "$($this.IO.StringBuilder)"
+@(
+if ($this.Input.prompt) {
+    foreach ($line in $this.Input.prompt -split '\[r\n|\n]') {
+        "&gt; $($line)"
+    }
+}
+"$($this.IO.StringBuilder)"
+) -join [Environment]::NewLine
+    
 } else {
     return ($this | Receive-Job -Keep | Out-String)
 }
@@ -43,6 +51,20 @@ if ($content -match '^[\s\r\n]{0,}\&lt;') {
     # otherwise, convert it from markdown and output the html.
     (ConvertFrom-Markdown -InputObject $content).Html
 }
+                    </GetScriptBlock>
+      </ScriptProperty>
+      <ScriptProperty>
+        <Name>Input</Name>
+        <GetScriptBlock>
+                        &lt;#
+.SYNOPSIS
+    Gets the ollama input
+.DESCRIPTION
+    Gets the ollama request input body as an object.
+#&gt;
+if (-not $this.IO.Body) { return }
+
+ConvertFrom-Json -InputObject $this.IO.Body
                     </GetScriptBlock>
       </ScriptProperty>
     </Members>
