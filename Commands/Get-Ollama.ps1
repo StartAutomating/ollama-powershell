@@ -213,9 +213,7 @@ function Get-Ollama {
                     return
                 }
                 $responseStream = $webResponse.GetResponseStream()
-                $responseStreamReader = [IO.StreamReader]::new($responseStream)
-                $startTime = [datetime]::Now
-                $responseNumber = 0
+                $responseStreamReader = [IO.StreamReader]::new($responseStream)                
                 
                 while ($readLine = $responseStreamReader.ReadLine()) {
                     $streamingResponse = $readLine | ConvertFrom-Json
@@ -231,19 +229,9 @@ function Get-Ollama {
                     $streamingResponse.pstypenames.clear()
                     foreach ($typename in $typenames) {
                         $streamingResponse.pstypenames.add($typename)
-                    }
-                    if ($Prompt -and -not $streamingResponse.Prompt) {
-                        $streamingResponse.psobject.properties.add(
-                            [psnoteproperty]::new('Prompt',$Prompt)
-                        )
                     }                    
-
-                    $streamingResponse.psobject.properties.add(
-                        [psnoteproperty]::new('ResponseNumber',$responseNumber)
-                    )
                     
-                    $streamingResponse                                        
-                    $responseNumber++
+                    $streamingResponse                    
                 }
             } -ArgumentList $in -Name $jobName            
             $startedThreadJob.psobject.properties.add([psnoteproperty]::new('IO',$in))
@@ -254,7 +242,7 @@ function Get-Ollama {
         filter WaitAndSummarize {
             $inJob = $_
             $typenames = @($args)
-            
+
             if ($inJob -isnot [Management.Automation.Job]) {
                 return $inJob
             }
@@ -369,13 +357,23 @@ function Get-Ollama {
                 # default to the last model name used
                 if ($script:LastOllamaModelName) {
                     $script:LastOllamaModelName
-                } else {
-                    # If there is no last model name, default to `llama3.2`
-                    'llama3.2'
+                } elseif (
+                    $MyInvocation.InvocationName -notin '&', '.' -and
+                    $MyInvocation.InvocationName -ne $MyInvocation.MyCommand.Name
+                ) {
+                    $MyInvocation.InvocationName
+                }                 
+                else {
+                    # If there is no last model name,
+                    # and we are not using an alias,
+                    # default to the most recently modified model
+                    Get-Ollama -ListModel | 
+                        Sort-Object Modified_at -Descending | 
+                            Select-Object -First 1 -ExpandProperty Model
                 }
             } else {
                 # If there was already a model name provided, use it.
-                $ModelName                
+                $ModelName
             }
 
         if ($PSBoundParameters['Format']) {
@@ -392,9 +390,9 @@ function Get-Ollama {
                     } elseif ($formatProperty -is [Collections.IDictionary]) {
                         foreach ($formatKeyValue in $formatProperty.GetEnumerator()) {
                             $fixedFormat.properties[$formatKeyValue.Key] = @{type=$formatKeyValue.Value}
-                            $requiredNames+= $formatKeyValue.Key
+                            $requiredNames += $formatKeyValue.Key
                         }
-                    }                    
+                    }
                 }
                 $FixedFormat.required = $requiredNames
                 $format = $FixedFormat
