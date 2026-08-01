@@ -64,6 +64,102 @@ if ($this.Input.prompt) {
                     </Script>
       </ScriptMethod>
       <ScriptProperty>
+        <Name>Context</Name>
+        <GetScriptBlock>
+                        &lt;#
+.SYNOPSIS
+    Gets a Job's Context
+.DESCRIPTION
+    Gets's a Job's Context.
+
+    When a job has completed, that last object will contain a `context`.
+
+    This is a series of numbers that can be crunched or visualized.
+
+    This property returns that last object's context property, if one is present.
+#&gt;
+param()
+
+# If this is not a job, we can't receive it's results.
+if ($this -isnot [Management.Automation.Job]) {
+    return
+}
+
+if (-not $this.Output.Count) { return }
+
+# Get the last output's context
+return $this.Output[-1].Context
+                    </GetScriptBlock>
+      </ScriptProperty>
+      <ScriptProperty>
+        <Name>ContextLine.svg</Name>
+        <GetScriptBlock>
+                        &lt;#
+.SYNOPSIS
+    Gets a Job's Context
+.DESCRIPTION
+    Gets's a Job's Context.
+
+    When a job has completed, that last object will contain a `context`.
+
+    This is a series of numbers that can be crunched or visualized.
+
+    This property returns that last object's context property, if one is present.
+#&gt;
+param()
+
+$thisContext = $this.Context -as [double[]]
+
+[xml]@(
+"
+&lt;svg xmlns='http://www.w3.org/2000/svg' width='100%' height='100%'&gt;
+&lt;polyline points='$thisContext' stroke='currentColor' fill='transparent' /&gt;
+&lt;/svg&gt;
+"
+)
+
+
+
+                    </GetScriptBlock>
+      </ScriptProperty>
+      <ScriptProperty>
+        <Name>ContextLineAnimation.svg</Name>
+        <GetScriptBlock>
+                        &lt;#
+.SYNOPSIS
+    Gets a Job's Context
+.DESCRIPTION
+    Gets's a Job's Context.
+
+    When a job has completed, that last object will contain a `context`.
+
+    This is a series of numbers that can be crunched or visualized.
+
+    This property returns that last object's context property, if one is present.
+#&gt;
+param()
+
+$thisContext = $this.Context -as [double[]]
+
+[xml]"
+&lt;svg xmlns='http://www.w3.org/2000/svg' width='100%' height='100%'&gt;
+&lt;polyline points='$thisContext' stroke='currentColor' fill='transparent'&gt;
+    &lt;animate attributeName='points' values='$thisContext;$(
+        foreach ($point in $thisContext) {
+            $point + (Get-Random -Maximum 16 -Minimum -16)
+        }
+    );$thisContext' dur='4.2s' repeatCount='indefinite' /&gt;
+&lt;/polyline&gt;
+&lt;/svg&gt;
+"
+
+
+
+
+
+                    </GetScriptBlock>
+      </ScriptProperty>
+      <ScriptProperty>
         <Name>Html</Name>
         <GetScriptBlock>
                         &lt;#
