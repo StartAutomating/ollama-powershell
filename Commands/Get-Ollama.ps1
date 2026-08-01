@@ -349,32 +349,35 @@ function Get-Ollama {
 
         
 
-        # Determine the model name.
-        # This won't _always_ be important, but in most scenarios it is.
-        $modelName =
-            # If we had not provided a model name parameter 
-            if (-not $psBoundParameters['ModelName']) {
-                # default to the last model name used
-                if ($script:LastOllamaModelName) {
-                    $script:LastOllamaModelName
-                } elseif (
-                    $MyInvocation.InvocationName -notin '&', '.' -and
-                    $MyInvocation.InvocationName -ne $MyInvocation.MyCommand.Name
-                ) {
-                    $MyInvocation.InvocationName
-                }                 
-                else {
-                    # If there is no last model name,
-                    # and we are not using an alias,
-                    # default to the most recently modified model
-                    Get-Ollama -ListModel | 
-                        Sort-Object Modified_at -Descending | 
-                            Select-Object -First 1 -ExpandProperty Model
+        if (-not $ListModel) {
+            # Determine the model name.
+            # This won't _always_ be important, but in most scenarios it is.
+            $modelName =
+                # If we had not provided a model name parameter 
+                if (-not $psBoundParameters['ModelName']) {
+                    # default to the last model name used
+                    if ($script:LastOllamaModelName) {
+                        $script:LastOllamaModelName
+                    } elseif (
+                        $MyInvocation.InvocationName -notin '&', '.' -and
+                        $MyInvocation.InvocationName -ne $MyInvocation.MyCommand.Name
+                    ) {
+                        $MyInvocation.InvocationName
+                    }                 
+                    else {
+                        # If there is no last model name,
+                        # and we are not using an alias,
+                        # default to the most recently modified model
+                        Get-Ollama -ListModel | 
+                            Sort-Object Modified_at -Descending | 
+                                Select-Object -First 1 -ExpandProperty Model
+                    }
+                } else {
+                    # If there was already a model name provided, use it.
+                    $ModelName
                 }
-            } else {
-                # If there was already a model name provided, use it.
-                $ModelName
-            }
+        }
+        
 
         if ($PSBoundParameters['Format']) {
             if ($format -is [Collections.IList]) {
