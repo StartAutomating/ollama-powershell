@@ -25,6 +25,13 @@ function Get-Ollama {
             }
             required = @("age","available")
         }) -NoStream
+    .EXAMPLE
+        Get-Ollama -Model "tinyllama" -Prompt "Ollama is 22 years old and is busy saving the world. Respond using JSON" -Format @(
+            "name"
+            "age"
+            "available"
+            "job"
+        ) -NoStream
     .LINK
         https://github.com/ollama/ollama/blob/main/docs/api.md
     #>
@@ -316,10 +323,8 @@ function Get-Ollama {
                 $inJob
             } else {
                 $inJob
-            }
-
-            
-        }
+            }            
+        }        
 
         $ollamaCli = $ExecutionContext.SessionState.InvokeCommand.GetCommand('ollama','Application')
         $nonPipelineParameters = [Ordered]@{} + $PSBoundParameters
@@ -380,7 +385,7 @@ function Get-Ollama {
         
 
         if ($PSBoundParameters['Format']) {
-            if ($format -is [Collections.IList]) {
+            if ($format -is [Collections.IList] -or $format -is [string]) {
                 $requiredNames = @()
                 $FixedFormat = [Ordered]@{
                     type = 'object'
@@ -388,11 +393,17 @@ function Get-Ollama {
                 }
                 foreach ($formatProperty in $format) {
                     if ($formatProperty -is [string]) {
+                        
                         $fixedFormat.properties[$formatProperty] = @{type='string'}
-                        $requiredNames+= $formatProperty
+                        $requiredNames+= "$formatProperty"                        
                     } elseif ($formatProperty -is [Collections.IDictionary]) {
                         foreach ($formatKeyValue in $formatProperty.GetEnumerator()) {
-                            $fixedFormat.properties[$formatKeyValue.Key] = @{type=$formatKeyValue.Value}
+                            $fixedFormat.properties[$formatKeyValue.Key] = 
+                                if ($formatKeyValue -is [Collections.IDictionary]) {
+                                    $formatKeyValue.Value
+                                } else {
+                                    @{type=$formatKeyValue.Value}
+                                }
                             $requiredNames += $formatKeyValue.Key
                         }
                     }
