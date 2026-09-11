@@ -118,7 +118,6 @@ function Get-Ollama {
     [int]
     $Temperature,
     
-
     # When creating a new model, this is the name of the base model
     [Parameter(ValueFromPipelineByPropertyName,ParameterSetName='/create')]
     [string]
@@ -137,7 +136,7 @@ function Get-Ollama {
 
     # One or more messages to send to the model.
     [Parameter(Mandatory,ValueFromPipelineByPropertyName,ParameterSetName='/chat')]
-    [Alias('Messages','Chat','ChatHistory')]
+    [Alias('Messages','Chat','ChatHistory','Chatlog')]
     [PSObject[]]
     $Message,
 
@@ -160,11 +159,27 @@ function Get-Ollama {
     [PSObject]
     $Format,
 
+    # One or more callback scripts.
+    # If provided, these scripts will be run whenever the job completes
+    [Parameter(ValueFromPipelineByPropertyName,ParameterSetName='/chat')]
+    [Parameter(ValueFromPipelineByPropertyName,ParameterSetName='/generate')]
+    [Alias('When', 'Action', 'Then')]
+    [ScriptBlock[]]
+    $Callback,
+
+    # If set, will not autosave 
+    [switch]
+    $NoAutoSave,
+
     # If set, will list the running models
     [Parameter(ValueFromPipelineByPropertyName,ParameterSetName='/ps')]
     [Alias('ListProcesses','GetProcesses','RunningModels')]
     [switch]
     $RunningModel,
+
+    [Parameter(Mandatory,ValueFromPipelineByPropertyName,ParameterSetName='history')]
+    [switch]
+    $History,
 
     # If set, will run in the background.
     [switch]
@@ -198,6 +213,7 @@ function Get-Ollama {
             foreach ($kv in $initalProperties.GetEnumerator()) {
                 $in[$kv.Key] = $kv.Value
             }
+            if ($NoAutoSave) {$in.NoAutoSave = $NoAutoSave}
             $startedThreadJob = Start-ThreadJob -ScriptBlock {
                 param([Collections.IDictionary]$io)
                 foreach ($ioKeyValue in $io.GetEnumerator()) {
@@ -220,7 +236,9 @@ function Get-Ollama {
                     return
                 }
                 $responseStream = $webResponse.GetResponseStream()
-                $responseStreamReader = [IO.StreamReader]::new($responseStream)                
+                $responseStreamReader = [IO.StreamReader]::new($responseStream)
+                
+                $responseObjects = @()
                 
                 while ($readLine = $responseStreamReader.ReadLine()) {
                     $streamingResponse = $readLine | ConvertFrom-Json
@@ -238,11 +256,46 @@ function Get-Ollama {
                         $streamingResponse.pstypenames.add($typename)
                     }                    
                     
+                    $responseObjects += $streamingResponse
                     $streamingResponse                    
                 }
-            } -ArgumentList $in -Name $jobName            
+                if ($mainRunspace) {
+                    $null = $mainRunspace.Events.GenerateEvent("Ollama.Complete", $IO.Job, $responseObjects, $IO)                    
+                }
+                if (-not $IO.NoAutoSave) {
+                    $IO.Job.Save()
+                }                
+            } -ArgumentList $in -Name $jobName -ThrottleLimit 2
+
+            # Decorate our thread job
+            $startedThreadJob.pstypenames.add('Ollama.Job')            
+            # and assign it into it's own IO dictionary.
+            # This allows a job to know itself
+            # (and save its own output rather than wait for it)
+            $in.Job = $startedThreadJob
+
+            
+            if ($callback) {
+                $subscriber = Register-ObjectEvent -InputObject $startedThreadJob -EventName StateChanged -Action {
+                    if ($event.Sender.State -notin 'Completed', 'Failed') {
+                        return
+                    }
+                    foreach ($call in $event.Sender.Callback) {
+                        & $call $event.Sender
+                    }
+                } -SupportEvent
+                
+                $startedThreadJob.psobject.properties.add(
+                    [psnoteproperty]::new('Callback',$Callback)
+                )
+            }
+            
+            $startedThreadJob.psobject.properties.add(
+                [psnoteproperty]::new('Subscriber',$subscriber)
+            )
+
             $startedThreadJob.psobject.properties.add([psnoteproperty]::new('IO',$in))
-            $startedThreadJob.pstypenames.add('Ollama.Job')
+            
             $startedThreadJob
         }
 
@@ -266,10 +319,7 @@ function Get-Ollama {
                 Start-Sleep -Milliseconds (Get-Random -Maximum 100 -Minimum 10)
             }
 
-            $lastLength = 0
-
             while ("$($inJob.JobStateInfo.State)" -and $inJob.JobStateInfo.State -notin 'Completed','Failed') {
-                $resultsSoFar = @($inJob | Receive-Job -Keep)                
                 if ($inJob.IO.StringBuilder.Length) {
                     $progressSplat.Activity = "$(
                         if ($Prompt) {
@@ -289,42 +339,15 @@ function Get-Ollama {
                             )
                         ) -replace '[\s\n\r]', ' '
                     )"
-                    Write-Progress @progressSplat
-                    $lastLength = $inJob.IO.StringBuilder.Length
-                }
-                
-                if ($resultsSoFar.total -and $resultsSoFar.completed) {
-                    for ($lastIndex = $resultsSoFar.Count - 1; $lastIndex -ge 0; $lastIndex--) {
-                        if ($resultsSoFar[$lastIndex].completed) {
-                            $gbDown = [Math]::Round($resultsSoFar[$lastIndex].completed / 1GB, 2)
-                            $gbTotal = [Math]::Round($resultsSoFar[$lastIndex].total / 1GB, 2)
-                            $progressSplat.Activity = "$($resultsSoFar[$lastIndex].status) "
-                            $progressSplat.PercentComplete = [Math]::Round(
-                                    $resultsSoFar[$lastIndex].completed * 100 / $resultsSoFar[$lastIndex].total,
-                                    2
-                            )
-                            $progressSplat.Status = "$($modelName) [${gbDown}gb / ${gbTotal}gb] $($progressSplat.PercentComplete)%"
-                            Write-Progress @progressSplat
-                            break
-                        }
-                    }
-                    
+                    Write-Progress @progressSplat                    
                 }
                 Start-Sleep -Milliseconds (Get-Random -Maximum 1kb -Minimum .25kb)
             }
             $progressSplat.Activity = 'Completed!'
             $progressSplat.Status = 'Done!'
             Write-Progress @progressSplat -Activity 'Waiting for Completion' -Status 'all done' -Completed
-                        
-            
-
-            if ($originalConsolePosition) {
-                [console]::Write("`e[$($originalConsolePosition.Item2);$($originalConsolePosition.Item1)H")
-                $inJob
-            } else {
-                $inJob
-            }            
-        }        
+            $inJob
+        }
 
         $ollamaCli = $ExecutionContext.SessionState.InvokeCommand.GetCommand('ollama','Application')
         $nonPipelineParameters = [Ordered]@{} + $PSBoundParameters
@@ -333,6 +356,16 @@ function Get-Ollama {
     process {
         # Derive the URL from the parameter set
         $parameterSet = $PSCmdlet.ParameterSetName
+
+        if ($parameterSet -eq 'history') {
+            Get-ChildItem (
+                [Environment]::GetFolderPath("ApplicationData"),
+                    "ollama-powershell" -join '/'
+            )
+              
+            return
+        }
+
         $in = $_
         if ($in.pstypenames -contains 'Ollama.Model') {
             if ($parameterSet -eq 'cli') {
@@ -350,9 +383,7 @@ function Get-Ollama {
             Uri = $OllamaApi, ($parameterSet -replace '^/') -join '/'
         }
         
-        Write-Verbose "$($invokeSplat.Uri)"
-
-        
+        Write-Verbose "$($invokeSplat.Uri)"        
 
         if (-not $ListModel) {
             # Determine the model name.
@@ -393,9 +424,8 @@ function Get-Ollama {
                 }
                 foreach ($formatProperty in $format) {
                     if ($formatProperty -is [string]) {
-                        
                         $fixedFormat.properties[$formatProperty] = @{type='string'}
-                        $requiredNames+= "$formatProperty"                        
+                        $requiredNames+= "$formatProperty"
                     } elseif ($formatProperty -is [Collections.IDictionary]) {
                         foreach ($formatKeyValue in $formatProperty.GetEnumerator()) {
                             $fixedFormat.properties[$formatKeyValue.Key] = 
