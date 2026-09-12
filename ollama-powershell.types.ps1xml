@@ -254,6 +254,26 @@ ConvertFrom-Json -InputObject $this.IO.Body
                     </GetScriptBlock>
       </ScriptProperty>
       <ScriptProperty>
+        <Name>LoadDuration</Name>
+        <GetScriptBlock>
+                        &lt;#
+.SYNOPSIS
+    Gets the Load Duration
+.DESCRIPTION
+    Gets the time spent loading the model
+#&gt;
+[OutputType([timespan])]
+param()
+if ($this.Output[-1].load_duration) {
+    [TimeSpan]::FromMilliseconds(
+        $this.Output[-1].load_duration * 0.000001
+    )    
+}
+
+
+                    </GetScriptBlock>
+      </ScriptProperty>
+      <ScriptProperty>
         <Name>TokenCount</Name>
         <GetScriptBlock>
                         &lt;#
