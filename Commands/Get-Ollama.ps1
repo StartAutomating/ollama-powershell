@@ -213,11 +213,15 @@ function Get-Ollama {
             foreach ($kv in $initalProperties.GetEnumerator()) {
                 $in[$kv.Key] = $kv.Value
             }
+            $in.Module = $MyInvocation.MyCommand.Module
             if ($NoAutoSave) {$in.NoAutoSave = $NoAutoSave}
             $startedThreadJob = Start-ThreadJob -ScriptBlock {
                 param([Collections.IDictionary]$io)
                 foreach ($ioKeyValue in $io.GetEnumerator()) {
                     $ExecutionContext.SessionState.PSVariable.Set($ioKeyValue.Key,$ioKeyValue.Value)
+                }
+                if ($module) {
+                    Import-Module ($module.Path -replace '\.psm1$', '.psd1') -Force
                 }                
                 $io.StringBuilder = [Text.StringBuilder]::new()
                 $in = $io
@@ -580,7 +584,8 @@ function Get-Ollama {
                     $noStreamingResponse = Invoke-RestMethod @invokeSplat
                     # and simply decorate our return.
                     $noStreamingResponse.pstypenames.clear()
-                    $noStreamingResponse.pstypenames.add('Ollama.Chat')                    
+                    $noStreamingResponse.pstypenames.add('Ollama.Reply')
+                    $noStreamingResponse.pstypenames.add('Ollama.Chat')
                     $noStreamingResponse
                 } else {
                     # Otherwise, we need to stream the response
