@@ -4,6 +4,19 @@
     <Name>Ollama.History</Name>
     <Members>
       <ScriptProperty>
+        <Name>ChatLog</Name>
+        <GetScriptBlock>
+                        &lt;#
+.SYNOPSIS
+    Gets ChatLog
+.DESCRIPTION
+    Gets the ChatLog from an Ollama history file
+#&gt;
+param()
+return $this.Data.ChatLog
+                    </GetScriptBlock>
+      </ScriptProperty>
+      <ScriptProperty>
         <Name>Data</Name>
         <GetScriptBlock>
                         &lt;#
