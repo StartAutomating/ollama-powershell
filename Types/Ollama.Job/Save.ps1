@@ -12,25 +12,45 @@ $Path
 )
 
 if (-not $path -and $this.PSBeginTime) {
-    $path = 
-        $this.Input.Model,
-            $this.PSBeginTime.ToUniversalTime().ToString('o').Replace(':','_') -join 
+
+    $path =     
+        $this.PSBeginTime.ToUniversalTime().ToString('o').Replace(':','_'),
+            $this.Input.Model -join 
                 '-'
+
+    $path =
+        [Environment]::GetFolderPath("ApplicationData"), 
+            "ollama-powershell",
+                $path -join
+                    '/'
 }
 
 $path = $path -replace '\.json$' -replace '$', '.json'
 
 if (-not $path) { return }
 
+$startTime = $this.PSBeginTime
+$endTime = if ($this.PSEndTime -is [DateTime]) {
+    $this.PSEndTime -is [DateTime]
+} elseif ($this.Output[-1].total_duration) {
+    $startTime += [TimeSpan]::FromMilliseconds(
+        $this.Output[-1].total_duration * 0.000001
+    )
+} else {
+    [DateTime]::Now
+}
+
 New-Item -ItemType File -Path $path -Value (
     [Ordered]@{
         start = $this.PSBeginTime
-        end = $this.PSEndTime
-        duration = "$(if ($this.PSEndTime) {
-            $this.PSEndTime - $this.PSBeginTime
+        end = $endTime
+        duration = "$(if ($endTime) {
+            $endTime - $startTime
         })"
+        model = $this.Input.ModelName
         input = $this.Input
-        output = $this | Receive-Job -Keep
+        chatlog = $this.Chatlog
+        summary = $this.Output[-1]
         url = $this.Name
     } | 
         ConvertTo-Json -Depth 100
