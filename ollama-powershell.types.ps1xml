@@ -294,6 +294,18 @@ if ($this.Output[-1].load_duration) {
                     </GetScriptBlock>
       </ScriptProperty>
       <ScriptProperty>
+        <Name>ModelName</Name>
+        <GetScriptBlock>
+                        &lt;#
+.SYNOPSIS
+    Gets the Model Name
+.DESCRIPTION
+    Gets the Model Name for this Ollama job.
+#&gt;
+return $This.Input.ModelName
+                    </GetScriptBlock>
+      </ScriptProperty>
+      <ScriptProperty>
         <Name>TokenCount</Name>
         <GetScriptBlock>
                         &lt;#
