@@ -11,7 +11,7 @@ if ($this.Data.ModelName) {
 }
 # Otherwise, take the file name,
 return $this.Name -replace 
-    '[\d\-_TZ]+' -replace # remove the data portion,
-    '\.json$' -replace  # remove the extension,
+    '\.json$' -replace  # remove the extension
+    '^[\d\-_TZ]+' -replace # remove the data portion,    
     '^\p{P}+' -replace # remove any leading punctuation
     '\p{P}+$' #  remove any trailining punctuation
