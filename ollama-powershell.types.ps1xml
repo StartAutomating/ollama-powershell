@@ -1,6 +1,36 @@
 <!-- Generated with EZOut 2.0.6: Install-Module EZOut or https://github.com/StartAutomating/EZOut -->
 <Types>
   <Type>
+    <Name>Ollama.History</Name>
+    <Members>
+      <ScriptProperty>
+        <Name>Data</Name>
+        <GetScriptBlock>
+                        &lt;#
+.SYNOPSIS
+    Ollama History Data
+.DESCRIPTION
+    Reads an Ollama History file and returns the data within it.
+.NOTES
+    Caches the data read to avoid repeated reads from disk.
+#&gt;
+param()
+if ($this.'#Data') {
+    return $this.'#Data'
+}
+
+$this | Add-Member NoteProperty '#Data' (
+    Get-Content $this.Fullname -raw | 
+        ConvertFrom-Json
+) -Force
+
+return $this.'#Data'
+
+                    </GetScriptBlock>
+      </ScriptProperty>
+    </Members>
+  </Type>
+  <Type>
     <Name>Ollama.Job</Name>
     <Members>
       <ScriptMethod>
