@@ -17,6 +17,56 @@ return $this.Data.ChatLog
                     </GetScriptBlock>
       </ScriptProperty>
       <ScriptProperty>
+        <Name>Code</Name>
+        <GetScriptBlock>
+                        &lt;#
+.SYNOPSIS
+    Gets Code Blocks
+.DESCRIPTION
+    Gets Code Blocks returned from an Ollama Job.
+.NOTES
+    This will return a dictionary of code blocks, grouped by language.
+#&gt;
+[OutputType([Collections.IDictionary])]
+param()
+
+$codeBlockPattern = 
+    [Regex]::new(
+        '
+            (?&gt;
+                (?&lt;FenceChar&gt;[`\~]){3}    # Code fences start with tildas or backticks, repeated at least 3 times
+            (?&lt;Language&gt;                  # Match a specific language
+            .+?(?=[\r\n])
+            )?
+            [\s-[\r\n]]{0,}               # Match but do not capture initial whitespace.
+            (?&lt;Code&gt;                      # Capture the &lt;Code&gt; block
+                (?:.|\s){0,}?             # This is anything until
+                (?=\z|\k&lt;FenceChar&gt;{3})   # the end of the string or the same matching fence chars
+            )
+            (?&gt;\z|\k&lt;FenceChar&gt;{3})
+            )
+        ', 
+        'IgnoreCase,IgnorePatternWhitespace,Singleline'
+    )
+
+$codeBlocks = [Ordered]@{}
+foreach ($message in $this.ChatLog) {
+    if ($message.role -ne 'assistant') { continue }
+    foreach ($match in $codeBlockPattern.Matches($message.content)) {
+        $language = $match.Groups['Language'].Value
+        if ($codeBlocks["$language"]) {
+            $codeBlocks["$language"] = @($codeBlocks["$language"]) + $match.Groups['Code'].Value
+        } else {
+            $codeBlocks["$language"] = $match.Groups['Code'].Value
+        }
+        #$match        
+    }
+}
+return $codeBlocks
+
+                    </GetScriptBlock>
+      </ScriptProperty>
+      <ScriptProperty>
         <Name>Data</Name>
         <GetScriptBlock>
                         &lt;#
