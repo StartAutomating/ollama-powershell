@@ -362,10 +362,13 @@ function Get-Ollama {
         $parameterSet = $PSCmdlet.ParameterSetName
 
         if ($parameterSet -eq 'history') {
-            Get-ChildItem (
+            foreach ($file in Get-ChildItem (
                 [Environment]::GetFolderPath("ApplicationData"),
                     "ollama-powershell" -join '/'
-            )
+            )) {
+                $File.pstypenames.add('Ollama.History')
+                $File
+            }
               
             return
         }
@@ -583,8 +586,7 @@ function Get-Ollama {
                     # we can use Invoke-RestMethod
                     $noStreamingResponse = Invoke-RestMethod @invokeSplat
                     # and simply decorate our return.
-                    $noStreamingResponse.pstypenames.clear()
-                    $noStreamingResponse.pstypenames.add('Ollama.Reply')
+                    $noStreamingResponse.pstypenames.clear()                    
                     $noStreamingResponse.pstypenames.add('Ollama.Chat')
                     $noStreamingResponse
                 } else {
