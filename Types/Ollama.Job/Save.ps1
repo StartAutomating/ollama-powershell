@@ -42,12 +42,12 @@ $endTime = if ($this.PSEndTime -is [DateTime]) {
 
 New-Item -ItemType File -Path $path -Value (
     [Ordered]@{
+        modelName = $this.Input.ModelName
         start = $this.PSBeginTime
         end = $endTime
         duration = "$(if ($endTime) {
             $endTime - $startTime
-        })"
-        model = $this.Input.ModelName
+        })"        
         input = $this.Input
         chatlog = $this.Chatlog
         summary = $this.Output[-1]
