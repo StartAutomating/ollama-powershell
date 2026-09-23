@@ -180,6 +180,9 @@ function Get-Ollama {
     [Parameter(Mandatory,ValueFromPipelineByPropertyName,ParameterSetName='history')]
     [switch]
     $History,
+    
+    [string[]]
+    $Keyword,
 
     # If set, will run in the background.
     [switch]
@@ -362,10 +365,22 @@ function Get-Ollama {
         $parameterSet = $PSCmdlet.ParameterSetName
 
         if ($parameterSet -eq 'history') {
+            
+            $pattern = "(?>$(
+                @(foreach ($kw in $Keyword) {
+                    [Regex]::Escape($kw)
+                }) -join '|'
+            ))"
+
             foreach ($file in Get-ChildItem (
                 [Environment]::GetFolderPath("ApplicationData"),
                     "ollama-powershell" -join '/'
             )) {
+                if ($Keyword) {
+                    if ([IO.File]::ReadAllText($file.FullName) -notmatch $pattern) {
+                        continue
+                    }
+                }
                 $File.pstypenames.add('Ollama.History')
                 $File
             }
