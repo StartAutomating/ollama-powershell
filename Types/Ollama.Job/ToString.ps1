@@ -6,8 +6,13 @@ if ($this.Input.prompt) {
     }
 }
 "$($this.IO.StringBuilder)"
+if ($this.Error.Count) {
+    "~~~"
+    $this.Error.Exception.Message
+    "~~~"
+}
 ) -join [Environment]::NewLine
     
 } else {
-    return ($this | Receive-Job -Keep | Out-String)
+    return ($this | Receive-Job -Keep 2>&1 | Out-String)
 }
