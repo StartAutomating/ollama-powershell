@@ -41,4 +41,18 @@ foreach ($message in $this.ChatLog) {
         #$match        
     }
 }
+
+if ($codeBlocks.PowerShell) {
+    $codeBlocks.PowerShell = foreach ($PowerShell in $codeBlocks.PowerShell) {
+        try {
+            [ScriptBlock]::Create($PowerShell)
+        } catch {
+            # If we could not parse, replace it with the exception
+            $errorRecord = $_ 
+            $errorRecord |
+                Add-Member NoteProperty Script $PowerShell -Force -PassThru 
+        }
+    }
+}
+
 return $codeBlocks
