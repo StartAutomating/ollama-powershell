@@ -1,6 +1,25 @@
 <!-- Generated with EZOut 2.0.6: Install-Module EZOut or https://github.com/StartAutomating/EZOut -->
 <Types>
   <Type>
+    <Name>Ollama.Chat</Name>
+    <Members>
+      <ScriptProperty>
+        <Name>TokenCount</Name>
+        <GetScriptBlock>
+                        &lt;#
+.SYNOPSIS
+    Gets the token count
+.DESCRIPTION
+    Gets the total tokens evaluated by the model and the prompt.
+
+    This is the `.eval_count` plus the `.prompt_eval_count`
+#&gt;
+$this.prompt_eval_count + $this.eval_count
+                    </GetScriptBlock>
+      </ScriptProperty>
+    </Members>
+  </Type>
+  <Type>
     <Name>Ollama.History</Name>
     <Members>
       <ScriptMethod>
@@ -779,6 +798,20 @@ if ($allText -match '^[\s\r\n]{0,}[\{\["]') {
 
 
 
+                    </GetScriptBlock>
+      </ScriptProperty>
+      <ScriptProperty>
+        <Name>TokenCount</Name>
+        <GetScriptBlock>
+                        &lt;#
+.SYNOPSIS
+    Gets the token count
+.DESCRIPTION
+    Gets the total tokens evaluated by the model and the prompt.
+
+    This is the `.eval_count` plus the `.prompt_eval_count`
+#&gt;
+$this.prompt_eval_count + $this.eval_count
                     </GetScriptBlock>
       </ScriptProperty>
     </Members>
