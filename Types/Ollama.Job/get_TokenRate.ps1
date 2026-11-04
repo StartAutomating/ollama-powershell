@@ -4,7 +4,7 @@
 .DESCRIPTION
     Gets the rate tokens were processed in tokens/second.
 
-    This is the token count / token rate
+    This is the token count / token duration
 #>
 param()
 $tokenCount = $this.TokenCount
