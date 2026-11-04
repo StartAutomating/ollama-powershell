@@ -40,6 +40,24 @@ elseif ($this.eval_duration) {
 }
                     </GetScriptBlock>
       </ScriptProperty>
+      <ScriptProperty>
+        <Name>TokenRate</Name>
+        <GetScriptBlock>
+                        &lt;#
+.SYNOPSIS
+    Gets the Token Rate
+.DESCRIPTION
+    Gets the rate tokens were processed in tokens/second.
+
+    This is the token count / token duration
+#&gt;
+param()
+$tokenCount = $this.TokenCount
+$tokenDuration = $this.TokenDuration
+if ($tokenCount -and $tokenDuration.TotalSeconds) { $tokenCount / $tokenDuration.TotalSeconds }
+
+                    </GetScriptBlock>
+      </ScriptProperty>
     </Members>
   </Type>
   <Type>
@@ -740,7 +758,7 @@ elseif ($this.Output[-1].eval_duration) {
 .DESCRIPTION
     Gets the rate tokens were processed in tokens/second.
 
-    This is the token count / token rate
+    This is the token count / token duration
 #&gt;
 param()
 $tokenCount = $this.TokenCount
@@ -858,6 +876,24 @@ elseif ($this.eval_duration) {
         $this.eval_duration * 0.000001
     )
 }
+                    </GetScriptBlock>
+      </ScriptProperty>
+      <ScriptProperty>
+        <Name>TokenRate</Name>
+        <GetScriptBlock>
+                        &lt;#
+.SYNOPSIS
+    Gets the Token Rate
+.DESCRIPTION
+    Gets the rate tokens were processed in tokens/second.
+
+    This is the token count / token duration
+#&gt;
+param()
+$tokenCount = $this.TokenCount
+$tokenDuration = $this.TokenDuration
+if ($tokenCount -and $tokenDuration.TotalSeconds) { $tokenCount / $tokenDuration.TotalSeconds }
+
                     </GetScriptBlock>
       </ScriptProperty>
     </Members>
