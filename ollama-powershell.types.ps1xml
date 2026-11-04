@@ -4,6 +4,22 @@
     <Name>Ollama.Chat</Name>
     <Members>
       <ScriptProperty>
+        <Name>Reason</Name>
+        <GetScriptBlock>
+                        &lt;#
+.SYNOPSIS
+    Gets the reason a request finished
+.DESCRIPTION
+    Gets the `done_reason` from an Ollama request.
+
+    This indicates why it believes the request was completed.
+#&gt;
+if ($this.done) {
+    $this.done_reason
+}
+                    </GetScriptBlock>
+      </ScriptProperty>
+      <ScriptProperty>
         <Name>TokenCount</Name>
         <GetScriptBlock>
                         &lt;#
@@ -55,6 +71,27 @@ param()
 $tokenCount = $this.TokenCount
 $tokenDuration = $this.TokenDuration
 if ($tokenCount -and $tokenDuration.TotalSeconds) { $tokenCount / $tokenDuration.TotalSeconds }
+
+                    </GetScriptBlock>
+      </ScriptProperty>
+      <ScriptProperty>
+        <Name>TotalDuration</Name>
+        <GetScriptBlock>
+                        &lt;#
+.SYNOPSIS
+    Gets the Total Duration
+.DESCRIPTION
+    Gets the total duration of a request.
+
+    This should be the combined the LoadDuration and TokenDuration
+#&gt;
+[OutputType([timespan])]
+param()
+if ($this.total_duration) {
+    [TimeSpan]::FromMilliseconds(
+        $this.total_duration * 0.000001
+    )    
+}
 
                     </GetScriptBlock>
       </ScriptProperty>
@@ -817,6 +854,22 @@ if ($this.load_duration) {
                     </GetScriptBlock>
       </ScriptProperty>
       <ScriptProperty>
+        <Name>Reason</Name>
+        <GetScriptBlock>
+                        &lt;#
+.SYNOPSIS
+    Gets the reason a request finished
+.DESCRIPTION
+    Gets the `done_reason` from an Ollama request.
+
+    This indicates why it believes the request was completed.
+#&gt;
+if ($this.done) {
+    $this.done_reason
+}
+                    </GetScriptBlock>
+      </ScriptProperty>
+      <ScriptProperty>
         <Name>Result</Name>
         <GetScriptBlock>
                         &lt;#
@@ -893,6 +946,27 @@ param()
 $tokenCount = $this.TokenCount
 $tokenDuration = $this.TokenDuration
 if ($tokenCount -and $tokenDuration.TotalSeconds) { $tokenCount / $tokenDuration.TotalSeconds }
+
+                    </GetScriptBlock>
+      </ScriptProperty>
+      <ScriptProperty>
+        <Name>TotalDuration</Name>
+        <GetScriptBlock>
+                        &lt;#
+.SYNOPSIS
+    Gets the Total Duration
+.DESCRIPTION
+    Gets the total duration of a request.
+
+    This should be the combined the LoadDuration and TokenDuration
+#&gt;
+[OutputType([timespan])]
+param()
+if ($this.total_duration) {
+    [TimeSpan]::FromMilliseconds(
+        $this.total_duration * 0.000001
+    )    
+}
 
                     </GetScriptBlock>
       </ScriptProperty>
