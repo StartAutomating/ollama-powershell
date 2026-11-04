@@ -175,12 +175,21 @@ function Get-Ollama {
     [Parameter(ValueFromPipelineByPropertyName,ParameterSetName='/ps')]
     [Alias('ListProcesses','GetProcesses','RunningModels')]
     [switch]
-    $RunningModel,
+    $RunningModel,    
 
+    # If set, will get the history of ollama jobs.
+    # Each job will automatically save unless `-NoAutoSave` is passed.
     [Parameter(Mandatory,ValueFromPipelineByPropertyName,ParameterSetName='history')]
     [switch]
     $History,
+
+    # The throttle limit.
+    # This is the number of background jobs that can be running at once.
+    # Because LLMs are resource intensive, using a high throttle limit may result in timed out jobs.    
+    [int]
+    $ThrottleLimit = 6,
     
+    # One or more keywords used to search the history.
     [string[]]
     $Keyword,
 
@@ -272,7 +281,7 @@ function Get-Ollama {
                 if (-not $IO.NoAutoSave) {
                     $IO.Job.Save()
                 }                
-            } -ArgumentList $in -Name $jobName -ThrottleLimit 2
+            } -ArgumentList $in -Name $jobName -ThrottleLimit $ThrottleLimit
 
             # Decorate our thread job
             $startedThreadJob.pstypenames.add('Ollama.Job')            
