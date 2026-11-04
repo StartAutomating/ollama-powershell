@@ -756,6 +756,31 @@ if ($this.load_duration) {
 
                     </GetScriptBlock>
       </ScriptProperty>
+      <ScriptProperty>
+        <Name>Result</Name>
+        <GetScriptBlock>
+                        &lt;#
+.SYNOPSIS
+    Gets Ollama Prompt Results
+.DESCRIPTION
+    Gets the result of an Ollama Prompt.
+
+    If JSON was outputted, will return an object.
+    
+    Otherwise, will return the response as text.
+#&gt;
+$allText = $this.Response
+
+if ($allText -match '^[\s\r\n]{0,}[\{\["]') {
+    ConvertFrom-Json -InputObject $allText
+} else {
+    $allText
+}
+
+
+
+                    </GetScriptBlock>
+      </ScriptProperty>
     </Members>
   </Type>
 </Types>
